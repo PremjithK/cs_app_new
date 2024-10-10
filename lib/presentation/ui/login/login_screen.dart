@@ -1,3 +1,4 @@
+import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -327,8 +328,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
         onTap: () async {
-          // Navigator.push(
-          //     context, MaterialPageRoute(builder: (context) => QRscanner()));
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => QRscanner()));
         },
       ),
     );
@@ -422,7 +423,7 @@ class _LoginScreenState extends State<LoginScreen> {
             showAlert(context, 'Please enter domain');
           } else {
             context.read<LoginBloc>().add(
-                OtpDomainValidationEvent(domain: txtDomainController.text));
+                OtpDomainValidationEvent(context,domain: txtDomainController.text));
           }
         },
         child: widgetText(
@@ -794,7 +795,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_domainfocusNode.hasFocus && txtDomainController.text.isNotEmpty) {
       context
           .read<LoginBloc>()
-          .add(DomainValidationEvent(domain: txtDomainController.text));
+          .add(DomainValidationEvent(context,domain: txtDomainController.text));
     } else {
       context.read<LoginBloc>().add(LoginInitialEvent());
     }
@@ -835,7 +836,7 @@ class _LoginScreenState extends State<LoginScreen> {
           status == 3
               ? context
                   .read<LoginBloc>()
-                  .add(DomainValidationEvent(domain: txtDomainController.text))
+                  .add(DomainValidationEvent(context,domain: txtDomainController.text))
               : null;
           status == 1 || status == 3
               ? FocusScope.of(context).nextFocus()

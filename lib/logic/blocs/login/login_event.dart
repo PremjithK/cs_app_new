@@ -6,13 +6,15 @@ sealed class LoginEvent {}
 class LoginInitialEvent extends LoginEvent {}
 
 class DomainValidationEvent extends LoginEvent {
+  final BuildContext context;
   final String domain;
-  DomainValidationEvent({required this.domain});
+  DomainValidationEvent(this.context, {required this.domain});
 }
 
 class OtpDomainValidationEvent extends LoginEvent {
+  final BuildContext context;
   final String domain;
-  OtpDomainValidationEvent({required this.domain});
+  OtpDomainValidationEvent(this.context, {required this.domain});
 }
 
 class SignEvent extends LoginEvent {
@@ -23,6 +25,7 @@ class SignEvent extends LoginEvent {
 }
 
 class QrSignEvent extends LoginEvent {
-  
-  // QrSignEvent({required this.context, required this.username, required this.password});
+  final BuildContext context;
+  final String qrcodeData;
+  QrSignEvent({required this.context, required this.qrcodeData});
 }

@@ -1,18 +1,9 @@
 
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:cybersquare/core/constants/api_endpoints.dart';
 import 'package:cybersquare/core/constants/asset_images.dart';
 import 'package:cybersquare/core/constants/colors.dart';
-import 'package:cybersquare/core/constants/const_strings.dart';
-import 'package:cybersquare/core/constants/user_details.dart';
-import 'package:cybersquare/core/services/analytics.dart';
-import 'package:cybersquare/core/services/api_services.dart';
-import 'package:cybersquare/core/utils/user_info.dart';
 import 'package:cybersquare/logic/blocs/login/login_bloc.dart';
-import 'package:cybersquare/logic/providers/course_detail_screen_provider.dart';
 import 'package:cybersquare/presentation/widgets/common_widgets.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -143,207 +134,12 @@ class _QRscannerState extends State<QRscanner> {
       _controller?.scannedDataStream.listen((scanData) async {
         // Handle the scanned data as desired
         _controller!.pauseCamera();
-        context.read<LoginBloc>().add(QrSignEvent());
-        try {
-            String qrcodedata = scanData.code.toString();
-            await loginlmsToken(qrcodedata);
-            await loadloguserdata();
-        } catch (e) {
-          showAlertforinvalidQR("Invalid QR code");
-        }
+        String qrcodedata = scanData.code.toString();
+        context.read<LoginBloc>().add(QrSignEvent(context: context, qrcodeData: qrcodedata));
         _controller!.resumeCamera();
         
       });
     });
-  }
-
-  loginlmsToken(String qrcodeData) async{
-    //postmethodapi with status code 200 , 400 and 500
-    if (constIsConnectedToInternet) {
-      String strUrl = "${url_identity_service}loginWithQrCode";
-      Platform.isAndroid ? PlatformOs = "android" : PlatformOs = "ios";
-
-      var postData = {
-        "qrCodeLoginId" : qrcodeData,
-        "os" : PlatformOs,
-        "from": "Mobile"
-      };
-
-      var headerData = {
-        'Content-Type': 'application/json; charset=UTF-8',
-        "authorization": constUserToken,
-      };
-
-      try {
-        final prov = Provider.of<courseProvider>(context,listen: false);
-        final response = await postMethodApi(postData, strUrl, headerData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          Map<String, dynamic> data = json.decode(response.body);
-          constUserToken = data["access_token"];
-          constLoginData.addAll(data);
-          constLoginStatus = 1;
-          constLoginUserId = constLoginData["active_user_data"]["userLoginId"];
-          getUserRoleMappingID(constLoginData);
-          await getUserActualName(constLoginData);
-          getCompanyIDFromActiveUserData(constLoginData);
-          await getroleName(constLoginData);
-          getUserLogo(constLoginData);
-          saveLoginStatus(1);
-          saveToken(constUserToken);
-          saveLoginData(data);
-          await loadCoursesForCandidates();
-          if (courseEmpty == true) {
-            prov.setmenuIndex(102); //102 is set for cs lab
-            Orientation currentOrientation = MediaQuery.of(context).orientation;
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //       builder: (context) {
-            //         return WebViewScreen(
-            //           strUrl: url_cslab+constUserToken,
-            //           strTitle: 'CS Lab',
-            //           screenStatus: 2,
-            //           currentOrientation: currentOrientation,
-            //           onSubmitBtnPressed: (int stat) {
-            //             enableRotation();
-            //           },
-            //         );
-            //       },
-            //       fullscreenDialog: true),
-            // );
-          } else {
-            prov.setmenuIndex(101); //101 is set for course screen
-          //   Navigator.pushReplacement<void, void>(
-          //   context,
-          //   MaterialPageRoute<void>(
-          //     builder: (BuildContext context) => CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,)
-          //   ),
-          // );
-          }
-          await companysettings();
-          AnalyticsService.logLoginEvent(loginid: constLoginUserId, userName: constActualUserName, roleName: constRoleName, companyId: constCompanyID, companyName: constcompanyName, status: 'login_successful');
-        }
-        else{
-          AnalyticsService.logLoginEvent(status: 'login_failed');
-          showAlert("Failed to login, please try again later");
-        }
-      } on SocketException catch (_) {
-        _isScanning.value = false;
-        showAlert(str_some_error_occurred_msg);
-      } on TimeoutException catch (_) {
-        _isScanning.value = false;
-        showAlert(connection_time_out);
-      }
-    }else {
-      _isScanning.value = false;
-      showAlert(str_no_network_msg);
-    }
-  }
-
-  loadloguserdata() async{
-    //postmethodapi with status code 200 , 400 and 500
-    if (constIsConnectedToInternet) {
-      String strUrl = url_base2 + url_load_log_user_data;
-
-      var postData = {
-        "UserDataObjId" : constLoginUserId
-      };
-
-      var headerData = {
-        'Content-Type': 'application/json; charset=UTF-8',
-      };
-
-      try {
-        final response = await postMethodApi(postData, strUrl, headerData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          String decodedData = json.decode(response.body);
-          Map<String, dynamic> data = json.decode(decodedData);
-
-          // add access_token key and constloginid value into constLoginData
-          constLoginData.addAll(data);
-          saveLoginData(constLoginData);
-        }
-      } on SocketException catch (_) {
-        showAlert(str_some_error_occurred_msg);
-      } on TimeoutException catch (_) {
-        showAlert(connection_time_out);
-      }
-    }else {
-      showAlert(str_no_network_msg);
-    }
-  }
-
-  companysettings() async {
-    if (constIsConnectedToInternet) {
-      String strUrl = '${url_base2}company/$constCompanyID';
-
-      try {
-        final response = await getMethodApi(strUrl);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          Map<String, dynamic> data = json.decode(response.body);
-          if (data["companyDetails"] != null) {
-            constLoginData.addAll(data);
-            saveLoginStatus(1);
-            // saveUserLogo(constLoginData);
-            getUserLogo(constLoginData);
-            // saveconstCompanyID(constLoginData);
-            getCompanyIDFromCompanySettings(constLoginData);
-            // saveconstCurrentAcademicYearId(constLoginData);
-            getCurrentAcademicYearID(constLoginData);
-            // String strJson = jsonEncode(data);
-            saveLoginData(data);
-            if (data["companyDetails"]["company_obj"]?["companyName"] != null) {
-              constcompanyName = data["companyDetails"]["company_obj"]["companyName"];
-            }
-            
-          }
-        }
-        else{
-          showAlert("Failed to login, please try again later");
-        }
-      } on SocketException catch (_) {
-        // setState(() {
-        //   isLoading = false;
-        // });
-        showAlert(str_some_error_occurred_msg);
-      } on TimeoutException catch (_) {
-        setState(() {
-          // isLoading = false;
-        });
-        showAlert(connection_time_out);
-      }
-    }
-  }
-
-  loadCoursesForCandidates()async{
-      String strUrl = url_base2 + url_courses_list;
-
-      var postData = {
-            // "userLoginId": constLoginUserId,
-            // "companyId": constCompanyID,
-            "requestFromBatchProgressCandidateSide": ""
-          };
-
-      var headerData = {
-      "Content-Type": "application/json; charset=UTF-8",
-      "authorization": constUserToken,
-      };
-
-      try {
-        final response = await postMethodApi(postData, strUrl, headerData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          Map<String, dynamic> data = json.decode(response.body);
-          // Map<String, dynamic> data = json.decode(decodedData);
-          if (data["courseObj"].isEmpty) {
-            courseEmpty = true;
-          }
-
-        }
-      } on SocketException catch (_) {
-        showAlert(str_some_error_occurred_msg);
-      } on TimeoutException catch (_) {
-        showAlert(connection_time_out);
-      }
   }
 
   pickfiles() async {
@@ -351,48 +147,19 @@ class _QRscannerState extends State<QRscanner> {
       type: FileType.image,
       allowMultiple: false,
     );
-    try {
-      if (result != null) {
-        _controller!.pauseCamera();
-        _isScanning.value = true;
-        var str = await Scan.parse(result.files.single.path!);
-        if (str != null) {
-            await loginlmsToken(str);
-            await loadloguserdata();
-        }else{
-          _isScanning.value = false;
-          showAlertforinvalidQR("Invalid QR code");
-        }
-      }
-    } catch (e) {
-       _isScanning.value = false;
-       print(e);
-      showAlertforinvalidQR("Invalid QR code");
+    _controller!.pauseCamera();
+    _isScanning.value = true;
+    if (result != null) {
+      var str = await Scan.parse(result.files.single.path!);
+      context.read<LoginBloc>().add(QrSignEvent(context: context, qrcodeData: str!));
+    }else{
+      _isScanning.value = false;
+      showAlert("Invalid QR code");
     }
-     _isScanning.value = false;
     _controller!.resumeCamera();
   }
 
   void showAlert(String strMsg) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.3),
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        content: Text(strMsg),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text("Ok"),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void showAlertforinvalidQR(String strMsg) {
     showDialog(
       context: context,
       barrierDismissible: false,

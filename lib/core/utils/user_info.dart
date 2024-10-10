@@ -27,10 +27,24 @@ Future<int> readLoginStatus() async {
     String str = await loadLoginData();
     if (logStat == 1) {
       if (str != "") {
-        Map<String, dynamic> data = json.decode(str);
+        Map<String, dynamic> data = json.decode(str);       
+        if (data != null) {
+          constUserToken = data["access_token"] ?? "";
+          if (constUserToken != "") {
+            constLoginData = data;
+            getCompanyIDFromActiveUserData(constLoginData);
+            getCurrentAcademicYearID(constLoginData);
+            getUserRoleMappingID(constLoginData);
+            getUserActualName(constLoginData);
+            getUserLogo(constLoginData);
+            if (constLoginData["active_user_data"] != null) {
+              constLoginUserId = constLoginData["active_user_data"]["userLoginId"];
+            }
+          }
+        }
       }
     }
-    return logStat;
+    return 0;
   } catch (e) {
     // If encountering an error, return 0
     return 0;

@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cybersquare/data/models/login_domain_model.dart';
+import 'package:cybersquare/presentation/ui/login/newscreen.dart';
 import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
+import 'package:cybersquare/presentation/ui/login/webscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:cybersquare/core/constants/api_endpoints.dart';
 import 'package:cybersquare/core/constants/const_strings.dart';
@@ -77,9 +79,37 @@ loginaccestokenApi(
       saveLoginStatus(1);
       saveToken(constUserToken);
       saveLoginData(data);
-      await loadCoursesForCandidatesApi(context);
+      bool courseEmpty = await loadCoursesForCandidatesApi(context);
       getUserLogo(constLoginData);
-
+      if (courseEmpty == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return const newscreen();
+                // WebViewScreen(
+                //   strUrl: url_cslab+constUserToken,
+                //   strTitle: 'CS Lab',
+                //   screenStatus: 2,
+                //   currentOrientation: currentOrientation,
+                //   onSubmitBtnPressed: (int stat) {
+                //     enableRotation();
+                //   },
+                // );
+              },
+              fullscreenDialog: true),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return const newscreen();
+                // CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,);
+              },
+              fullscreenDialog: true),
+        );
+      }
       AnalyticsService.logLoginEvent(
           loginid: constLoginUserId,
           userName: constActualUserName,
@@ -92,23 +122,18 @@ loginaccestokenApi(
       //   isLoading = false;
       // });
     } else {
-      // setState(() {
-      //   isLoading = false;
-      // });
       Map<String, dynamic> data = json.decode(response.body);
       AnalyticsService.logLoginEvent(status: 'login_failed');
       showAlert(context, data["message"]);
     }
   } else {
-    // setState(() {
-    //   isLoading = false;
-    // });
-    throw Exception('No Internet Connection');
     showAlert(context, str_no_network_msg);
   }
 }
 
-loadUserProfileDetailsApi() async {
+loadUserProfileDetailsApi(
+  BuildContext context,
+) async {
   if (constIsConnectedToInternet) {
     String strUrl = url_base2 + url_scorecard;
     var postData = {
@@ -133,13 +158,15 @@ loadUserProfileDetailsApi() async {
           }
         }
       }
+    } else {
+      throw Exception('Api call failed');
     }
   } else {
-    throw Exception('No Internet Connection');
+    showAlert(context, str_no_network_msg);
   }
 }
 
-loadloguserdataApi() async {
+loadloguserdataApi(BuildContext context) async {
   //postmethodapi with status code 200 , 400 and 500
   if (constIsConnectedToInternet) {
     String strUrl = url_base2 + url_load_log_user_data;
@@ -159,13 +186,15 @@ loadloguserdataApi() async {
       constLoginData.addAll(data);
       saveLoginData(constLoginData);
       getUserLogo(constLoginData);
+    } else {
+      throw Exception('Api call failed');
     }
   } else {
-    throw Exception('No Internet Connection');
+    showAlert(context, str_no_network_msg);
   }
 }
 
-checkdomainApi(String domain) async {
+checkdomainApi(String domain, BuildContext context) async {
   String? extractSchoolName(String url) {
     final regex = RegExp(r'^(https?://)?([^/.]*)');
     final match = regex.firstMatch(url);
@@ -190,7 +219,7 @@ checkdomainApi(String domain) async {
   final strUrl = url_base2 + url_checkdomain;
   final response = await postMethodApi(postData, strUrl, header);
 
-  if (response.statusCode == 200) {
+  if (response.statusCode == 200 || response.statusCode == 201) {
     // Parse the response and emit success state
     final dynamic data = jsonDecode(response.body);
     final dynamic data1 = json.decode(data);
@@ -209,64 +238,93 @@ checkdomainApi(String domain) async {
     } else {
       constCompanyID = '';
       constMainCompanyID = '';
+      showAlert(context, 'Invalid Domain');
       throw Exception('Invalid Domain');
-      // emit(OtpDomainInvalid());
     }
   } else {
+    showAlert(context, 'Invalid Domain');
     throw Exception('Invalid Domain');
-    // Emit failure state
-    // emit(OtpDomainInvalid());
   }
 }
 
-loginlmsToken(String qrcodeData,BuildContext context) async{
-    //postmethodapi with status code 200 , 400 and 500
-    if (constIsConnectedToInternet) {
-      String strUrl = "${url_identity_service}loginWithQrCode";
-      Platform.isAndroid ? PlatformOs = "android" : PlatformOs = "ios";
+loginQrApi(String qrcodeData, BuildContext context) async {
+  //postmethodapi with status code 200 , 400 and 500
+  if (constIsConnectedToInternet) {
+    String strUrl = "${url_identity_service}loginWithQrCode";
+    Platform.isAndroid ? PlatformOs = "android" : PlatformOs = "ios";
 
-      var postData = {
-        "qrCodeLoginId" : qrcodeData,
-        "os" : PlatformOs,
-        "from": "Mobile"
-      };
+    var postData = {
+      "qrCodeLoginId": qrcodeData,
+      "os": PlatformOs,
+      "from": "Mobile"
+    };
 
-      var headerData = {
-        'Content-Type': 'application/json; charset=UTF-8',
-        "authorization": constUserToken,
-      };
+    var headerData = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      "authorization": constUserToken,
+    };
 
-      try {
-        final prov = Provider.of<courseProvider>(context,listen: false);
-        final response = await postMethodApi(postData, strUrl, headerData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          Map<String, dynamic> data = json.decode(response.body);
-          constUserToken = data["access_token"];
-          constLoginData.addAll(data);
-          constLoginStatus = 1;
-          constLoginUserId = constLoginData["active_user_data"]["userLoginId"];
-          getUserRoleMappingID(constLoginData);
-          await getUserActualName(constLoginData);
-          getCompanyIDFromActiveUserData(constLoginData);
-          await getroleName(constLoginData);
-          getUserLogo(constLoginData);
-          saveLoginStatus(1);
-          saveToken(constUserToken);
-          saveLoginData(data);
-          await loadCoursesForCandidatesApi(context);
-          await companysettingsApi();
-          AnalyticsService.logLoginEvent(loginid: constLoginUserId, userName: constActualUserName, roleName: constRoleName, companyId: constCompanyID, companyName: constcompanyName, status: 'login_successful');
-        }
-        else{
-          AnalyticsService.logLoginEvent(status: 'login_failed');
-          showAlert(context,"Failed to login, please try again later");
-        }
-      } on SocketException catch (_) {
-        QRscanner.isScanning.value = false;
-        showAlert(context,str_some_error_occurred_msg);
+    final response = await postMethodApi(postData, strUrl, headerData);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      Map<String, dynamic> data = json.decode(response.body);
+      constUserToken = data["access_token"];
+      constLoginData.addAll(data);
+      constLoginStatus = 1;
+      constLoginUserId = constLoginData["active_user_data"]["userLoginId"];
+      getUserRoleMappingID(constLoginData);
+      await getUserActualName(constLoginData);
+      getCompanyIDFromActiveUserData(constLoginData);
+      await getroleName(constLoginData);
+      getUserLogo(constLoginData);
+      saveLoginStatus(1);
+      saveToken(constUserToken);
+      saveLoginData(data);
+      bool isCourseAvailable = await loadCoursesForCandidatesApi(context);
+      await companysettingsApi();
+      if (isCourseAvailable == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return const newscreen();
+                // CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,);
+              },
+              fullscreenDialog: true),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return const newscreen1();
+                // WebViewScreen(
+                //   strUrl: url_cslab+constUserToken,
+                //   strTitle: 'CS Lab',
+                //   screenStatus: 2,
+                //   currentOrientation: currentOrientation,
+                //   onSubmitBtnPressed: (int stat) {
+                //     enableRotation();
+                //   },
+                // );
+                
+              },
+              fullscreenDialog: true),
+        );
       }
-    }else {
+      AnalyticsService.logLoginEvent(
+          loginid: constLoginUserId,
+          userName: constActualUserName,
+          roleName: constRoleName,
+          companyId: constCompanyID,
+          companyName: constcompanyName,
+          status: 'login_successful');
+    } else {
       QRscanner.isScanning.value = false;
-      showAlert(context,str_no_network_msg);
+      AnalyticsService.logLoginEvent(status: 'login_failed');
+      showAlert(context, "Invalid QR Code");
     }
+  } else {
+    QRscanner.isScanning.value = false;
+    showAlert(context, str_no_network_msg);
   }
+}

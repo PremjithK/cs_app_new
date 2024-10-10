@@ -1,3 +1,5 @@
+import 'package:cybersquare/presentation/ui/login/newscreen.dart';
+import 'package:cybersquare/presentation/ui/login/webscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cybersquare/core/constants/user_details.dart';
@@ -67,34 +69,45 @@ class MyApp extends StatelessWidget {
               if (constLoginStatus == 1) {
 
                 if(constUserToken != "" && constLoginData.isNotEmpty) {
-                  return loadCoursesForCandidatesApi(context);
-                  // return FutureBuilder<void>(
-                  //   future: loadCoursesForCandidatesApi(context),
-                  //   builder: (context, snapshot) {
-                  //     if (snapshot.connectionState == ConnectionState.done) {
-                  //       if (snapshot.hasError) {
-                  //         return LoginScreen();
-                  //       }
-                  //       if (courseEmpty == true) {
-                  //         Orientation currentOrientation = MediaQuery.of(context).orientation;
-                  //         return LoginScreen();
-                  //         // WebViewScreen(
-                  //         //           strUrl: url_cslab+constUserToken,
-                  //         //           strTitle: 'CS Lab',
-                  //         //           screenStatus: 2,
-                  //         //           currentOrientation: currentOrientation,
-                  //         //           onSubmitBtnPressed: (int stat) {
-                  //         //             enableRotation();
-                  //         //           },
-                  //         //         );
-                  //       } else {
-                  //         return LoginScreen();
-                  //       }
-                  //     } else {
-                  //       return LoginScreen();
-                  //     }
-                  //   },
-                  // );
+                  // return loadCoursesForCandidatesApi(context);
+                  return FutureBuilder(
+                    future: loadCoursesForCandidatesApi(context),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasError) {
+                          return LoginScreen();
+                        }
+                        if (snapshot.data == true) {
+                          // snapshot data true means there is course available for the student, so show the course list screen
+                          Orientation currentOrientation = MediaQuery.of(context).orientation;
+                          return newscreen1();
+                          
+                        } else {
+                          return newscreen();
+                          // WebViewScreen(
+                          //           strUrl: url_cslab+constUserToken,
+                          //           strTitle: 'CS Lab',
+                          //           screenStatus: 2,
+                          //           currentOrientation: currentOrientation,
+                          //           onSubmitBtnPressed: (int stat) {
+                          //             enableRotation();
+                          //           },
+                          //         );
+                        }
+                      } else {
+                        return newscreen();
+                        // WebViewScreen(
+                          //           strUrl: url_cslab+constUserToken,
+                          //           strTitle: 'CS Lab',
+                          //           screenStatus: 2,
+                          //           currentOrientation: currentOrientation,
+                          //           onSubmitBtnPressed: (int stat) {
+                          //             enableRotation();
+                          //           },
+                          //         );
+                      }
+                    },
+                  );
                 }
                 else {
                   return const LoginScreen();

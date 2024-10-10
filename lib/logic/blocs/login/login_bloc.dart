@@ -1,4 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:bloc/bloc.dart';
+import 'package:cybersquare/core/constants/const_strings.dart';
+import 'package:cybersquare/core/utils/common_functions.dart';
+import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 import 'package:cybersquare/data/repositories/authentication_repo.dart';
@@ -17,10 +21,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       try {
         await companysettingsApi();
         await loginaccestokenApi(context: event.context, username: event.username, password: event.password);
-        await loadUserProfileDetailsApi();
-        await loadloguserdataApi();
+        await loadUserProfileDetailsApi(event.context);
+        await loadloguserdataApi(event.context);
         emit(SignSuccess());
       } catch (e) {
+        showAlert(event.context, str_some_error_occurred_msg);
         emit(SignError());
       }
     });
@@ -28,7 +33,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<DomainValidationEvent>((event, emit) async {
       try {
         emit(LoadingState());
-        await checkdomainApi(event.domain);
+        await checkdomainApi(event.domain,event.context);
         emit(DomainValid()); 
       } catch (e) {
         emit(DomainInvalid());
@@ -38,7 +43,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<OtpDomainValidationEvent>((event, emit) async {
       try {
         emit(LoadingState());
-        await checkdomainApi(event.domain);
+        await checkdomainApi(event.domain,event.context);
         emit(OtpDomainValid());
       } catch (e) {
         emit(OtpDomainInvalid());
@@ -47,9 +52,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
     on<QrSignEvent>((event, emit) async {
       try{
-        // await loginlmsToken(event.qrcode);
+        await loginQrApi(event.qrcodeData, event.context);
+        await loadloguserdataApi(event.context);
+        QRscanner.isScanning.value = false;
       } catch(e){
-        print(e);
+        QRscanner.isScanning.value = false;
+        showAlert(event.context, 'Invalid QR code');
       }
     });
   }
