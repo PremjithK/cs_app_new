@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-void showAlert(context,strMsg) {
+void showAlert({required BuildContext context,required String strMsg}) {
   showDialog(
     context: context,
     barrierDismissible: false,

@@ -1,4 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
+import 'dart:developer';
+
 import 'package:bloc/bloc.dart';
 import 'package:cybersquare/core/constants/const_strings.dart';
 import 'package:cybersquare/core/utils/common_functions.dart';
@@ -12,8 +14,8 @@ part 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc() : super(LoginInitial()) {
-    on<LoginEvent>((event, emit) {
-      // TODO: implement event handler
+     on<LoginInitialEvent>((event, emit) {
+      emit(LoginInitial());
     });
 
     on<SignEvent>((event, emit) async {
@@ -25,7 +27,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         await loadloguserdataApi(event.context);
         emit(SignSuccess());
       } catch (e) {
-        showAlert(event.context, str_some_error_occurred_msg);
+        showAlert(context: event.context,strMsg: str_some_error_occurred_msg);
         emit(SignError());
       }
     });
@@ -57,7 +59,52 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         QRscanner.isScanning.value = false;
       } catch(e){
         QRscanner.isScanning.value = false;
-        showAlert(event.context, 'Invalid QR code');
+        showAlert(context: event.context,strMsg: 'Invalid QR code');
+      }
+    });
+
+    on<OtploginDetails>((event, emit) async {
+      try {
+        emit(OtpDetailsLoadingState());
+        await forgotPasswordDetailsApi(event.context, event.username);
+        emit(OtpDetailsSuccessState());
+      } catch (e) {
+        emit(OtpDetailsSuccessState());
+      }
+    });
+
+    on<SentOtpEvent>((event, emit) async {
+      try {
+        // using same otp details loading state for lottie
+        emit(OtpDetailsLoadingState());
+        await sentOtpApi(event.context);
+        emit(OtpDetailsSuccessState());
+      } catch (e) {
+        emit(OtpDetailsSuccessState());
+      }
+    });
+
+    on<ValidateOtpEvent>((event, emit) async {
+      try {
+        // using same otp details loading state for lottie
+        emit(OtpDetailsLoadingState());
+        await validateOtpApi(event.context,event.otp);
+        emit(OtpValid());
+        emit(OtpDetailsSuccessState());
+      } catch (e) {
+        emit(OtpInvalid());
+        emit(OtpDetailsSuccessState());
+      }
+    });
+
+    on<OtpLoginEvent>((event, emit) async {
+      try {
+        // using same otp details loading state for lottie\
+        await companysettingsApi();
+        await loadloguserdatafotOtploginApi(event.context);
+      } catch (e) {
+        emit(OtpInvalid());
+        showAlert(context: event.context,strMsg: str_some_error_occurred_msg);
       }
     });
   }

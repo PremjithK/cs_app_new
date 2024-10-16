@@ -1,5 +1,10 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cybersquare/presentation/ui/login/forgot_password_screen.dart';
 import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,9 +13,8 @@ import 'package:cybersquare/core/constants/asset_images.dart';
 import 'package:cybersquare/core/constants/colors.dart';
 import 'package:cybersquare/core/constants/user_details.dart';
 import 'package:cybersquare/core/utils/common_functions.dart';
-import 'package:cybersquare/logic/blocs/login/login_bloc.dart';      
+import 'package:cybersquare/logic/blocs/login/login_bloc.dart';
 import 'package:cybersquare/logic/providers/forgotpassword_model.dart';
-import 'package:cybersquare/presentation/ui/login/newscreen.dart';
 import 'package:cybersquare/presentation/widgets/common_widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -31,13 +35,62 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   String avatar = "";
   String? domain;
-  // final Connectivity _connectivity = Connectivity();
-  // late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
   Orientation currentOrientation = Orientation.landscape;
   // Companies? dropdownvalue;
   bool _isEnabled = false;
   // GetDomainModel user = GetDomainModel();
   bool courseEmpty = false;
+
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    currentOrientation = Orientation.landscape;
+    initConnectivity();
+    _domainfocusNode.addListener(_onFocusChange);
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> initConnectivity() async {
+    late List<ConnectivityResult> result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      return;
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(List<ConnectivityResult> result) async {
+    if (result.contains(ConnectivityResult.wifi) ||
+        result.contains(ConnectivityResult.mobile) ||
+        result.contains(ConnectivityResult.ethernet)) {
+      setState(() {
+        constIsConnectedToInternet = true;
+      });
+    } else {
+      setState(() {
+        constIsConnectedToInternet = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 return iconValidate(2);
               } else if (state is DomainValid) {
                 return iconValidate(3);
-              } else if (state is DomainInvalid) {
+              } else if (state is DomainInvalid || state is OtpDomainInvalid) {
                 return iconValidate(4);
               } else {
                 return iconValidate(5);
@@ -365,18 +418,18 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         onPressed: () async {
           if (txtDomainController.text.isEmpty) {
-            showAlert(context, "Please enter domain");
+            showAlert(context: context, strMsg: "Please enter domain");
           } else if (constCompanyID == '') {
-            showAlert(context, 'Invalid domain');
+            showAlert(context: context, strMsg: 'Invalid domain');
           } else if (txtEmailController.text.isEmpty) {
-            showAlert(context, "Please enter Username");
+            showAlert(context: context, strMsg: "Please enter Username");
           } else {
             const bool isValid = true;
             //     EmailValidator.validate(txtEmailController.text);
             if (isValid == false) {
-              showAlert(context, "Please enter valid email");
+              showAlert(context: context, strMsg: "Please enter valid email");
             } else if (txtPasswordController.text.isEmpty) {
-              showAlert(context, "Please enter Password");
+              showAlert(context: context, strMsg: "Please enter Password");
             } else {
               FocusScope.of(context).unfocus();
               // setState(() {
@@ -408,22 +461,22 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(
                 builder: (context) {
-                  return newscreen();
-                  // ForgotPasswordScreen();
+                  return ForgotPasswordScreen();
+                  // newscreen();
                 },
                 fullscreenDialog: true),
           );
         } else if (state is OtpDomainInvalid) {
-          showAlert(context, 'Invalid domain!');
+          showAlert(context: context, strMsg: 'Invalid domain!');
         }
       },
       child: TextButton(
         onPressed: () {
           if (txtDomainController.text.isEmpty) {
-            showAlert(context, 'Please enter domain');
+            showAlert(context: context, strMsg: 'Please enter domain');
           } else {
-            context.read<LoginBloc>().add(
-                OtpDomainValidationEvent(context,domain: txtDomainController.text));
+            context.read<LoginBloc>().add(OtpDomainValidationEvent(context,
+                domain: txtDomainController.text));
           }
         },
         child: widgetText(
@@ -793,9 +846,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onFocusChange() {
     // Check if the TextField has lost focus
     if (!_domainfocusNode.hasFocus && txtDomainController.text.isNotEmpty) {
-      context
-          .read<LoginBloc>()
-          .add(DomainValidationEvent(context,domain: txtDomainController.text));
+      context.read<LoginBloc>().add(
+          DomainValidationEvent(context, domain: txtDomainController.text));
     } else {
       context.read<LoginBloc>().add(LoginInitialEvent());
     }
@@ -834,9 +886,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         onEditingComplete: () {
           status == 3
-              ? context
-                  .read<LoginBloc>()
-                  .add(DomainValidationEvent(context,domain: txtDomainController.text))
+              ? context.read<LoginBloc>().add(DomainValidationEvent(context,
+                  domain: txtDomainController.text))
               : null;
           status == 1 || status == 3
               ? FocusScope.of(context).nextFocus()

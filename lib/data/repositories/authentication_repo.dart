@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cybersquare/data/models/login_domain_model.dart';
+import 'package:cybersquare/logic/blocs/login/login_bloc.dart';
+import 'package:cybersquare/logic/providers/forgotpassword_model.dart';
 import 'package:cybersquare/presentation/ui/login/newscreen.dart';
 import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
 import 'package:cybersquare/presentation/ui/login/webscreen.dart';
@@ -14,6 +16,7 @@ import 'package:cybersquare/core/utils/common_functions.dart';
 import 'package:cybersquare/core/utils/user_info.dart';
 import 'package:cybersquare/data/repositories/course_repo.dart';
 import 'package:cybersquare/logic/providers/course_detail_screen_provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 companysettingsApi() async {
@@ -124,10 +127,10 @@ loginaccestokenApi(
     } else {
       Map<String, dynamic> data = json.decode(response.body);
       AnalyticsService.logLoginEvent(status: 'login_failed');
-      showAlert(context, data["message"]);
+      showAlert(context: context, strMsg: data["message"]);
     }
   } else {
-    showAlert(context, str_no_network_msg);
+    showAlert(context: context, strMsg: str_no_network_msg);
   }
 }
 
@@ -162,7 +165,7 @@ loadUserProfileDetailsApi(
       throw Exception('Api call failed');
     }
   } else {
-    showAlert(context, str_no_network_msg);
+    showAlert(context: context, strMsg: str_no_network_msg);
   }
 }
 
@@ -190,7 +193,7 @@ loadloguserdataApi(BuildContext context) async {
       throw Exception('Api call failed');
     }
   } else {
-    showAlert(context, str_no_network_msg);
+    showAlert(context: context, strMsg: str_no_network_msg);
   }
 }
 
@@ -238,11 +241,9 @@ checkdomainApi(String domain, BuildContext context) async {
     } else {
       constCompanyID = '';
       constMainCompanyID = '';
-      showAlert(context, 'Invalid Domain');
       throw Exception('Invalid Domain');
     }
   } else {
-    showAlert(context, 'Invalid Domain');
     throw Exception('Invalid Domain');
   }
 }
@@ -306,7 +307,6 @@ loginQrApi(String qrcodeData, BuildContext context) async {
                 //     enableRotation();
                 //   },
                 // );
-                
               },
               fullscreenDialog: true),
         );
@@ -321,10 +321,224 @@ loginQrApi(String qrcodeData, BuildContext context) async {
     } else {
       QRscanner.isScanning.value = false;
       AnalyticsService.logLoginEvent(status: 'login_failed');
-      showAlert(context, "Invalid QR Code");
+      showAlert(context: context, strMsg: "Invalid QR Code");
     }
   } else {
     QRscanner.isScanning.value = false;
-    showAlert(context, str_no_network_msg);
+    showAlert(context: context, strMsg: str_no_network_msg);
+  }
+}
+
+// FORGOT PASSWORD API'S
+
+forgotPasswordDetailsApi(BuildContext context, String username) async {
+  FocusScope.of(context).unfocus();
+  if (constIsConnectedToInternet) {
+    String strUrl = url_identity_service + url_forgot_password;
+
+    // setState(() {
+    //   isLoading = true;
+    // });
+
+    var postData = {"username": username, "company_id": constCompanyID};
+
+    var headerData = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      // 'Origin': http+url_origin,
+    };
+
+    final response = await postMethodApi(postData, strUrl, headerData);
+    // setState(() {
+    //   isLoading = false;
+    // });
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      if (data["mobile_array"] != null || data["email_array"] != null) {
+        if (data["mobile_array"] != null) {
+          mobile_list.addAll(data["mobile_array"]);
+        }
+        if (data["email_array"] != null) {
+          email_list.addAll(data["email_array"]);
+        }
+        constLoginUserId = data["user_login_id"];
+        Provider.of<ForgotpswdProvider>(context, listen: false)
+            .setotpEmailvalidated(true);
+      } else {
+        String strError = data["message"] ??
+            "Sorry ! There is no contact information available to provide login";
+        showAlert(context: context, strMsg: strError);
+        throw Exception(strError);
+      }
+    } else {
+      String strError = data["message"] ??
+          "Sorry ! There is no contact information available to provide login";
+      showAlert(context: context, strMsg: strError);
+      throw Exception(strError);
+    }
+  } else {
+    showAlert(context: context, strMsg: str_no_network_msg);
+  }
+}
+
+sentOtpApi(BuildContext context) async {
+  if (constIsConnectedToInternet) {
+    String strUrl = url_identity_service + url_sent_otp;
+
+    // setState(() {
+    //   isLoading = true;
+    // });
+
+    var postData = {
+      "userLoginId": constLoginUserId,
+      "mobile_index_array":
+          Provider.of<ForgotpswdProvider>(context, listen: false)
+              .selectedmobileIndexes,
+      "email_index_array":
+          Provider.of<ForgotpswdProvider>(context, listen: false)
+              .selectedemailIndexes,
+      "company_id": constCompanyID
+    };
+
+    var headerData = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      // 'Origin': http+url_origin,
+    };
+
+    final response = await postMethodApi(postData, strUrl, headerData);
+    // setState(() {
+    //   isLoading = false;
+    // });
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      Fluttertoast.showToast(
+        msg: 'OTP successfully sent',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 2,
+        backgroundColor: Colors.black45,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    } else {
+      String strError =
+          data["message"] ?? "Failed to reset password, please try again later";
+      showAlert(context: context, strMsg: strError);
+    }
+  } else {
+    showAlert(context: context, strMsg: str_no_network_msg);
+  }
+}
+
+validateOtpApi(BuildContext context, String otpEntered) async {
+  if (constIsConnectedToInternet) {
+    String strUrl = url_identity_service + url_otp_validation;
+
+    // setState(() {
+    //   isLoading = true;
+    // });
+
+    var postData = {
+      "userLoginId": constLoginUserId,
+      "otp": otpEntered,
+      "company_id": constCompanyID
+    };
+
+    var headerData = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      // 'Origin': http+url_origin,
+    };
+
+    final response = await postMethodApi(postData, strUrl, headerData);
+    Map<String, dynamic> data = json.decode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      if (data["access_token"] != null) {
+        constUserToken = data["access_token"];
+      }
+    } else {
+      String strError =
+          data["message"] ?? "Failed to login, please try again later";
+      showAlert(
+        context: context,
+        strMsg: strError,
+      );
+      throw Exception(strError);
+    }
+  } else {
+    showAlert(context: context, strMsg: str_no_network_msg);
+  }
+}
+
+loadloguserdatafotOtploginApi(BuildContext context) async {
+  //postmethodapi with status code 200 , 400 and 500
+  if (constIsConnectedToInternet) {
+    String strUrl = url_base2 + url_load_log_user_data;
+
+    var postData = {"UserDataObjId": constLoginUserId};
+
+    var headerData = {
+      'Content-Type': 'application/json; charset=UTF-8',
+    };
+
+    final response = await postMethodApi(postData, strUrl, headerData);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      String decodedData = json.decode(response.body);
+      Map<String, dynamic> data = json.decode(decodedData);
+
+      // add access_token key and constloginid value into constLoginData
+      constLoginData.addAll(data);
+      constLoginData.addAll({"access_token": constUserToken});
+      constLoginStatus = 1;
+      constLoginUserId = constLoginData["userLoginId"];
+      getUserRoleMappingID(constLoginData);
+      await getUserActualName(constLoginData);
+      await getroleName(constLoginData);
+      saveLoginStatus(1);
+      saveLoginData(constLoginData);
+      bool isCourseAvailable = await loadCoursesForCandidatesApi(context);
+      if (isCourseAvailable == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return const newscreen();
+                // CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,);
+              },
+              fullscreenDialog: true),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) {
+                return const newscreen1();
+                // WebViewScreen(
+                //   strUrl: url_cslab+constUserToken,
+                //   strTitle: 'CS Lab',
+                //   screenStatus: 2,
+                //   currentOrientation: currentOrientation,
+                //   onSubmitBtnPressed: (int stat) {
+                //     enableRotation();
+                //   },
+                // );
+              },
+              fullscreenDialog: true),
+        );
+      }
+      AnalyticsService.logLoginEvent(
+          loginid: constLoginUserId,
+          userName: constActualUserName,
+          roleName: constRoleName,
+          companyId: constCompanyID,
+          companyName: constcompanyName,
+          status: 'login_successful');
+      context.read<LoginBloc>().add(LoginInitialEvent());
+    } else {
+      AnalyticsService.logLoginEvent(status: 'login_failed');
+      showAlert(
+          context: context, strMsg: "Failed to login, please try again later");
+      throw Exception('Api call failed');
+    }
+  } else {
+    showAlert(context: context, strMsg: str_no_network_msg);
   }
 }

@@ -21,3 +21,10 @@ class SignError extends LoginState {}
 
 class SignSuccess extends LoginState {}
 
+class OtpDetailsLoadingState extends LoginState {}
+
+class OtpDetailsSuccessState extends LoginState {}
+
+class OtpValid extends LoginState {}
+
+class OtpInvalid extends LoginState {}

@@ -29,3 +29,26 @@ class QrSignEvent extends LoginEvent {
   final String qrcodeData;
   QrSignEvent({required this.context, required this.qrcodeData});
 }
+
+class OtploginDetails extends LoginEvent {
+  final BuildContext context;
+  final String username;
+
+  OtploginDetails({required this.context, required this.username});
+}
+
+class SentOtpEvent extends LoginEvent {
+  final BuildContext context;
+  SentOtpEvent({required this.context});
+}
+
+class ValidateOtpEvent extends LoginEvent {
+  final BuildContext context;
+  final String otp;
+  ValidateOtpEvent({required this.context, required this.otp});
+}
+
+class OtpLoginEvent extends LoginEvent {
+  final BuildContext context;
+  OtpLoginEvent({required this.context});
+}
