@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cybersquare/data/models/login_domain_model.dart';
 import 'package:cybersquare/logic/blocs/login/login_bloc.dart';
 import 'package:cybersquare/logic/providers/forgotpassword_model.dart';
+import 'package:cybersquare/presentation/ui/dashboard/dashboard_screen.dart';
 import 'package:cybersquare/presentation/ui/login/newscreen.dart';
 import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
 import 'package:cybersquare/presentation/ui/login/webscreen.dart';
@@ -89,7 +90,7 @@ loginaccestokenApi(
           context,
           MaterialPageRoute(
               builder: (context) {
-                return const newscreen();
+                return DashboardScreen(avatar: Userlogo,);
                 // WebViewScreen(
                 //   strUrl: url_cslab+constUserToken,
                 //   strTitle: 'CS Lab',
@@ -107,7 +108,7 @@ loginaccestokenApi(
           context,
           MaterialPageRoute(
               builder: (context) {
-                return const newscreen();
+                return DashboardScreen(avatar: Userlogo,);
                 // CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,);
               },
               fullscreenDialog: true),
@@ -287,7 +288,7 @@ loginQrApi(String qrcodeData, BuildContext context) async {
           context,
           MaterialPageRoute(
               builder: (context) {
-                return const newscreen();
+                return  DashboardScreen(avatar: Userlogo,);
                 // CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,);
               },
               fullscreenDialog: true),
@@ -297,7 +298,7 @@ loginQrApi(String qrcodeData, BuildContext context) async {
           context,
           MaterialPageRoute(
               builder: (context) {
-                return const newscreen1();
+                return  DashboardScreen(avatar: Userlogo,);
                 // WebViewScreen(
                 //   strUrl: url_cslab+constUserToken,
                 //   strTitle: 'CS Lab',
@@ -500,7 +501,7 @@ loadloguserdatafotOtploginApi(BuildContext context) async {
           context,
           MaterialPageRoute(
               builder: (context) {
-                return const newscreen();
+                return  DashboardScreen(avatar: Userlogo,);
                 // CoursesListScreen(screenStatus: 1,strTitle: "",avatar: Userlogo,);
               },
               fullscreenDialog: true),
@@ -510,7 +511,7 @@ loadloguserdatafotOtploginApi(BuildContext context) async {
           context,
           MaterialPageRoute(
               builder: (context) {
-                return const newscreen1();
+                return DashboardScreen(avatar: Userlogo,);
                 // WebViewScreen(
                 //   strUrl: url_cslab+constUserToken,
                 //   strTitle: 'CS Lab',

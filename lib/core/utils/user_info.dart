@@ -40,6 +40,7 @@ Future<int> readLoginStatus() async {
             if (constLoginData["active_user_data"] != null) {
               constLoginUserId = constLoginData["active_user_data"]["userLoginId"];
             }
+            return 1;
           }
         }
       }

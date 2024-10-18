@@ -1,3 +1,4 @@
+import 'package:cybersquare/presentation/ui/dashboard/dashboard_screen.dart';
 import 'package:cybersquare/presentation/ui/login/newscreen.dart';
 import 'package:cybersquare/presentation/ui/login/webscreen.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,7 @@ class MyApp extends StatelessWidget {
                         if (snapshot.data == true) {
                           // snapshot data true means there is course available for the student, so show the course list screen
                           Orientation currentOrientation = MediaQuery.of(context).orientation;
-                          return newscreen1();
+                          return DashboardScreen(avatar: Userlogo);
                           
                         } else {
                           return newscreen();

@@ -96,7 +96,7 @@ const color_Pending_submission = Color(0xfff44336);
 
 
 const Color color_cybersquare_red = Color(0xfffb5850);
-const Color color_bg = Color(0xfffffbfb);
+const Color color_bg = Color.fromARGB(255, 246, 239, 239);
 const Color color_text = Color(0xff545454);
 const Color color_primary = Color(0xff03a9f4);
 const Color color_scorecard_label = Color(0xff2d7ba8);

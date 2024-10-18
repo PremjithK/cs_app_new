@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cybersquare/globals.dart';
 import 'package:cybersquare/presentation/ui/login/forgot_password_screen.dart';
 import 'package:cybersquare/presentation/ui/login/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
@@ -834,7 +835,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Text(
       txtValue,
       textAlign: txtAlign,
-      style: GoogleFonts.poppins(
+      style: GoogleFonts.getFont(
+        globalFontName,
         color: txtColor,
         fontSize: txtFontSize,
         // fontFamily: fontName,
@@ -878,7 +880,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ? txtPasswordController
                 : txtDomainController,
         decoration: setupTxtFieldDecoration(txtValue, status),
-        style: GoogleFonts.poppins(
+        style: GoogleFonts.getFont(
+          globalFontName,
           color: txtColor,
           fontSize: txtFontSize,
           // fontFamily: fontName,

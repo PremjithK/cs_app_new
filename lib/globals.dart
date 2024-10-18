@@ -27,3 +27,5 @@ class ProdConfig extends Config {
   static String urlCsLab ='https://cslab.cybersquare.org/?token=';
   static String urlBaseImage='https://99lmsfileuploadfolder.s3.ap-south-1.amazonaws.com/uploaded/';
 }
+
+const String globalFontName = 'Instrument Sans';
