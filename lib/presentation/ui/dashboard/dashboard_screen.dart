@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:developer';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cybersquare/connectivity.dart';
 import 'package:cybersquare/core/constants/asset_images.dart';
 import 'package:cybersquare/core/constants/colors.dart';
 import 'package:cybersquare/core/constants/const_strings.dart';
@@ -22,6 +21,7 @@ import 'package:cybersquare/presentation/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -37,6 +37,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   // final Connectivity _connectivity = Connectivity();
   // late StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  late ConnectivityManager connectivityManager;
 
   //? Academic Year
   String? academicYearSelected =
@@ -53,18 +54,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // page = 0;
-    // initConnectivity();
-    // _connectivitySubscription =
-    //     _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-    // if (constIsConnectedToInternet) {
-    //   getNewsAndEventsApi();
-    // }
+
+    connectivityManager = ConnectivityManager(
+      onConnected: () {
+        if(mounted) {
+          _newsBloc.add(FetchNewsAndEvents());
+        _liveClassBloc.add(FetchLiveClasses());
+        _activitiesBloc.add(
+          FetchActivities(
+            pageNo: 0,
+            limit: _activitiesBloc.activities.length,
+          ),
+        );
+        }
+      },
+      onDisconnected: () {
+        if (mounted) {
+          showAlert(context: context, strMsg: str_no_network_msg);
+        }
+      },
+    );
 
     if (constCurrentAcademicYearId.isNotEmpty &&
         constListAcademicYearData.isNotEmpty) {
       academicYearList = constListAcademicYearData;
     }
+    _activitiesBloc.page = 0;
     activityScrollController.addListener(() {
       if (activityScrollController.position.atEdge &&
           activityScrollController.position.pixels != 0) {
@@ -75,92 +90,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
               limit: _activitiesBloc.activities.length,
             ),
           );
-          log('PAGE NO. ${_activitiesBloc.page}');
         }
       }
     });
-    // getLiveClass();
-    // WidgetsBinding.instance
-    //     ?.addPostFrameCallback((_) => _refreshIndicatorKey.currentState?.show());
-
-    //? NEWS AND EVENTS
-    // _newsBloc.add(FetchNewsAndEvents());
-    //? ACTIVITIES
-    _activitiesBloc.page = 0;
-    _activitiesBloc.add(
-      FetchActivities(
-        pageNo: 0,
-        limit: _activitiesBloc.activities.length,
-      ),
-    );
-  }
-
-  Future<void> initConnectivity() async {
-    // List<ConnectivityResult> result = [ConnectivityResult.none];
-    // // Platform messages may fail, so we use a try/catch PlatformException.
-    // try {
-    //   result = await _connectivity.checkConnectivity();
-    // } on PlatformException catch (e) {}
-    // // If the widget was removed from the tree while the asynchronous platform
-    // // message was in flight, we want to discard the reply rather than calling
-    // // setState to update our non-existent appearance.
-    // if (!mounted) {
-    //   return Future.value(null);
-    // }
-
-    // return _updateConnectionStatus(result);
-  }
-
-  Future<void> _updateConnectionStatus(List<ConnectivityResult> result) async {
-    // switch (result) {
-    //   case result:
-    //     setState(() {
-    //       constIsConnectedToInternet = true;
-    //     });
-    //     // if (newsListApiStatus != 1) {
-    //     //   getNewsAndEventsApi();
-    //     // }
-    //     // if (academicYearSelected != null &&
-    //     //     (academicYearList.isEmpty || constListAcademicYearData.isEmpty)) {
-    //     //   // if(academicYearList.isEmpty || constListAcademicYearData.isEmpty){
-    //     //   getAcademicYearApi();
-    //     // } else if (activityListApiStatus != 1) {
-    //     //   page = 0;
-    //     //   getActivitiesApi();
-    //     // }
-    //     break;
-    //   case [ConnectivityResult.mobile]:
-    //     setState(() {
-    //       constIsConnectedToInternet = true;
-    //     });
-    //     // if (newsListApiStatus != 1) {
-    //     //   getNewsAndEventsApi();
-    //     // }
-    //     // if (academicYearSelected != null &&
-    //     //     (academicYearList.isEmpty || constListAcademicYearData.isEmpty)) {
-    //     //   getAcademicYearApi();
-    //     // } else if (activityListApiStatus != 1) {
-    //     //   page = 0;
-    //     //   getActivitiesApi();
-    //     // }
-    //     break;
-    //   case [ConnectivityResult.none]:
-    //     setState(() {
-    //       constIsConnectedToInternet = false;
-    //     });
-    //     break;
-    //   default:
-    //     setState(() {
-    //       constIsConnectedToInternet = false;
-    //     });
-    //     break;
-    // }
   }
 
   @override
   Widget build(BuildContext context) {
     _newsBloc.add(FetchNewsAndEvents());
     _liveClassBloc.add(FetchLiveClasses());
+    _activitiesBloc.add(
+      FetchActivities(
+        pageNo: 0,
+        limit: _activitiesBloc.activities.length,
+      ),
+    );
 
     return PopScope(
       canPop: onBackPressCallback(),
@@ -241,13 +185,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return const SizedBox();
                     } else {
                       if (state.data!.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.only(top: 10),
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 10),
                           child: Align(
                             alignment: Alignment.topCenter,
                             child: Text(
                               "Swipe down to refresh",
-                              style: TextStyle(color: Colors.black38),
+                              style: GoogleFonts.getFont(
+                                globalFontName,
+                                color: Colors.black38,
+                              ),
                             ),
                           ),
                         );
@@ -648,6 +595,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.075),
+                blurRadius: 10,
+                offset: const Offset(1, 1),
+              ),
+            ],
           ),
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.fromLTRB(0, 0, 0, 16),
@@ -669,7 +623,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               style: GoogleFonts.getFont(
                                 globalFontName,
                                 color: Colors.black,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                               children: [
                                 TextSpan(
@@ -677,7 +631,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   style: GoogleFonts.getFont(
                                     globalFontName,
                                     color: Colors.black,
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -692,7 +646,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   style: GoogleFonts.getFont(
                                     globalFontName,
                                     color: Colors.black,
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -712,7 +666,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: GoogleFonts.getFont(
                             globalFontName,
                             color: Colors.grey,
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.end,
@@ -727,7 +681,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: GoogleFonts.getFont(
                             globalFontName,
                             color: Colors.black,
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -736,7 +690,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: GoogleFonts.getFont(
                             globalFontName,
                             color: Colors.black,
-                            fontSize: 15,
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -853,14 +807,14 @@ Widget _newsItem(NewsAndEvents news) {
                       maxLines: 2,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    "5 hours ago",
-                    style: TextStyle(color: Colors.grey, fontSize: 10),
-                  ),
+                  const SizedBox(width: 5),
+                  // const Text(
+                  //   "5 hours ago",
+                  //   style: TextStyle(color: Colors.grey, fontSize: 10),
+                  // ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
               // Text(
               //   news.description!,
               //   style: const TextStyle(
@@ -869,14 +823,16 @@ Widget _newsItem(NewsAndEvents news) {
               //   ),
               //   maxLines: 2,
               // ),
-              // TODO: Html(data: news.description!),
-              const SizedBox(height: 10),
-              const Text(
+              Html(data: news.description!),
+              const SizedBox(height: 5),
+              Text(
                 "Read More",
-                style: TextStyle(
-                    color: Colors.blue,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700),
+                style: GoogleFonts.getFont(
+                  globalFontName,
+                  color: Colors.blue,
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
             ],
           ),

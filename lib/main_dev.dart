@@ -11,7 +11,7 @@ import 'package:cybersquare/myapp.dart';
 import 'package:provider/provider.dart';
 import 'package:upgrader/upgrader.dart';
 
-Future<void> main() async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   Config.isProduction = DevConfig.isProduction;
@@ -25,30 +25,30 @@ Future<void> main() async{
   await Upgrader.clearSavedSettings();
   final upgrader = Upgrader(
     storeController: UpgraderStoreController(
-        oniOS: () => UpgraderAppStore(),
-        onAndroid: () => UpgraderPlayStore(),
+      oniOS: () => UpgraderAppStore(),
+      onAndroid: () => UpgraderPlayStore(),
     ),
   );
   await upgrader.initialize();
 
-
-  runApp( MultiBlocProvider(
-    providers: [
-    // Provider<ForgotpswdProvider>(create: (_) => ForgotpswdProvider()),
-    ChangeNotifierProvider(create: (_) => ForgotpswdProvider()),
-    ChangeNotifierProvider(create: (_) => courseProvider()),
-    ChangeNotifierProvider(create: (_) => FullScreenProvider()),
-    // ChangeNotifierProvider(create: (_) => ExamResultProvider()),
-    ChangeNotifierProvider(create: (_) => ExamScreenProvider()),
-    // ChangeNotifierProvider(create: (_) => TrainingSessionsProvider()),
-    ChangeNotifierProvider(create: (_) => ProjectScreenProvider()),
-    BlocProvider(create: (context) => LoginBloc()),
-  ],
-    child: MyApp(upgrader: upgrader,)));
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        // Provider<ForgotpswdProvider>(create: (_) => ForgotpswdProvider()),
+        ChangeNotifierProvider(create: (_) => ForgotpswdProvider()),
+        ChangeNotifierProvider(create: (_) => courseProvider()),
+        ChangeNotifierProvider(create: (_) => FullScreenProvider()),
+        // ChangeNotifierProvider(create: (_) => ExamResultProvider()),
+        ChangeNotifierProvider(create: (_) => ExamScreenProvider()),
+        // ChangeNotifierProvider(create: (_) => TrainingSessionsProvider()),
+        ChangeNotifierProvider(create: (_) => ProjectScreenProvider()),
+        BlocProvider(create: (context) => LoginBloc()),
+      ],
+      child: MyApp(upgrader: upgrader),
+    ),
+  );
 }
 
-class TrainingSessionsProvider {
-}
+class TrainingSessionsProvider {}
 
-class ExamResultProvider {
-}
+class ExamResultProvider {}

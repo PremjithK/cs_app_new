@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -20,7 +19,6 @@ class NewsAndEventsBloc extends Bloc<NewsAndEventsEvent, NewsAndEventsState> {
     FetchNewsAndEvents event,
     Emitter<NewsAndEventsState> emit,
   ) async {
-    log('fetching news and events');
     emit(NewsAndEventsLoading());
     try {
       final response = await getNewsAndEventsApi();

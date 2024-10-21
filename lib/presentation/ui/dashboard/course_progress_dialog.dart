@@ -158,7 +158,7 @@ class _CourseProgressDialogState extends State<CourseProgressDialog> {
         style: GoogleFonts.getFont(
           globalFontName,
           color: title ? Colors.black : color_text,
-          fontSize: title ? 18 : 14,
+          fontSize: title ? 18 : 13,
           fontWeight: title ? FontWeight.w700 : FontWeight.w500,
         ),
         textAlign: TextAlign.left,
