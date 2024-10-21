@@ -16,6 +16,7 @@ import 'package:cybersquare/logic/blocs/live_class/live_class_bloc.dart';
 import 'package:cybersquare/logic/blocs/news_and_events/news_and_events_bloc.dart';
 import 'package:cybersquare/presentation/ui/app_drawer/app_drawer.dart';
 import 'package:cybersquare/presentation/ui/dashboard/course_progress_dialog.dart';
+import 'package:cybersquare/presentation/widgets/alert_dialogs.dart';
 import 'package:cybersquare/presentation/widgets/custom_app_bar.dart';
 import 'package:cybersquare/presentation/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -57,15 +59,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     connectivityManager = ConnectivityManager(
       onConnected: () {
-        if(mounted) {
+        if (mounted) {
           _newsBloc.add(FetchNewsAndEvents());
-        _liveClassBloc.add(FetchLiveClasses());
-        _activitiesBloc.add(
-          FetchActivities(
-            pageNo: 0,
-            limit: _activitiesBloc.activities.length,
-          ),
-        );
+          _liveClassBloc.add(FetchLiveClasses());
+          _activitiesBloc.add(
+            FetchActivities(
+              pageNo: 0,
+              limit: _activitiesBloc.activities.length,
+            ),
+          );
         }
       },
       onDisconnected: () {
@@ -379,15 +381,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 letterSpacing: status == 1 ? 0.48 : 0,
               ),
             ),
-            onTap: () {
-              if (strValue != "NA") {
-                _launchURL(strValue);
+            onTap: () async {
+              if (strValue != "NA" || strValue.isNotEmpty) {
+                await _launchUrl(context, Uri.parse(strValue));
               }
             },
           )
         : widgetText(
             strValue,
-            // "strValue strValue strValue strValue strValue strValue strValue strValue strValue strValue strValue strValue strValue strValue123",
             "",
             constDeviceType == 1 ? 14.5 : 16,
             color_login_text_black,
@@ -525,53 +526,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
               status: strMeetingCode != "NA" ? 1 : 0),
           const SizedBox(height: 16),
           Visibility(
-              visible: strZoomLink != "NA" || strMeetingLink != "NA",
-              child: Container(
-                width: 80,
-                height: 35,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey.shade300)),
-                child: InkWell(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 10,
-                          width: 10,
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: Colors.red),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: widgetText(
-                              "Join",
-                              "",
-                              14,
-                              color_login_text_black,
-                              TextAlign.left,
-                              FontWeight.w500,
-                              0),
-                        ),
-                      ],
-                    ),
+            visible: strZoomLink != "NA" || strMeetingLink != "NA",
+            child: Container(
+              width: 80,
+              height: 35,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade300)),
+              child: InkWell(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
                   ),
-                  onTap: () {
-                    if (strZoomLink != "NA") {
-                      // _launchURL(strZoomLink);
-                    } else if (strMeetingLink != "NA") {
-                      // _launchURL(strMeetingLink);
-                    }
-                  },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 10,
+                        width: 10,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.red),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: widgetText(
+                            "Join",
+                            "",
+                            14,
+                            color_login_text_black,
+                            TextAlign.left,
+                            FontWeight.w500,
+                            0),
+                      ),
+                    ],
+                  ),
                 ),
-              )),
+                onTap: () async {
+                  if (strZoomLink != "NA") {
+                    await _launchUrl(context, Uri.parse(strZoomLink));
+                  } else if (strMeetingLink != "NA") {
+                    await _launchUrl(context, Uri.parse(strMeetingLink));
+                  }
+                },
+              ),
+            ),
+          ),
           Visibility(
             visible: strZoomLink != "NA" || strMeetingLink != "NA",
             child: const SizedBox(height: 5),
@@ -588,7 +590,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     material == 0 ? material = 1 : material = material;
     double progress = totalCompletedCourses / material * 100;
 
-    //double progress = totalCompletedCourses / activity.materialcount! * 100;
     return Column(
       children: [
         Container(
@@ -608,8 +609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image.asset(img_user,width: 40,height: 40,),
-              // SizedBox(width: 10,),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,15 +701,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         customButton(
                           str_try_now,
                           onTap: () {
-                            //   Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //       builder: (context) => ActivityView(activity.id!,
-                            //           activity.activityName, constLoginUserId),
-                            //     ),
-                            //   ).then((value) => setState(() {
-                            //         // getActivitiesApi();
-                            //       }));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SizedBox(),
+                              ),
+                            ).then((_) {
+                              _newsBloc.add(FetchNewsAndEvents());
+                              _liveClassBloc.add(FetchLiveClasses());
+                              _activitiesBloc.add(
+                                FetchActivities(
+                                  pageNo: 0,
+                                  limit: _activitiesBloc.activities.length,
+                                ),
+                              );
+                            });
                           },
                         ),
                         const SizedBox(width: 30),
@@ -730,7 +736,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 Text(
                                   "$str_completed $totalCompletedCourses $str_of ${activity.materialcount!}",
-                                  //  activity.materials!.length.toString(),
                                   style: GoogleFonts.getFont(
                                     globalFontName,
                                     color: Colors.black,
@@ -842,9 +847,10 @@ Widget _newsItem(NewsAndEvents news) {
   );
 }
 
-void _launchURL(String strUrl) async {
-  // if (!await launch(strUrl)) throw 'Could not launch $strUrl';
-  // await canLaunch(strUrl)
-  //     ? await launch(strUrl)
-  //     : showAlertWithMessage(context, str_some_error_occurred_msg);
+Future<void> _launchUrl(BuildContext context, Uri url) async {
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url);
+  } else {
+    showAlertWithMessage(context, str_some_error_occurred_msg);
+  }
 }
