@@ -1,6 +1,6 @@
 import 'package:cybersquare/core/constants/colors.dart';
 import 'package:cybersquare/core/constants/user_details.dart';
-import 'package:cybersquare/presentation/widgets/text_widget.dart';
+import 'package:cybersquare/presentation/widgets/widget_text.dart';
 import 'package:flutter/material.dart';
 
 Widget setupExceptionView(String strMsg, {status = 0}) {

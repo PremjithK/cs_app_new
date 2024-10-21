@@ -18,7 +18,7 @@ import 'package:cybersquare/presentation/ui/app_drawer/app_drawer.dart';
 import 'package:cybersquare/presentation/ui/dashboard/course_progress_dialog.dart';
 import 'package:cybersquare/presentation/widgets/alert_dialogs.dart';
 import 'package:cybersquare/presentation/widgets/custom_app_bar.dart';
-import 'package:cybersquare/presentation/widgets/text_widget.dart';
+import 'package:cybersquare/presentation/widgets/widget_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,11 +37,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // final Connectivity _connectivity = Connectivity();
-  // late StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   late ConnectivityManager connectivityManager;
 
-  //? Academic Year
   String? academicYearSelected =
       constCurrentAcademicYearId.isNotEmpty ? constCurrentAcademicYearId : null;
   List<AcademicYear> academicYearList = [];
@@ -147,11 +144,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: SafeArea(
               child: SizedBox(
                 width: MediaQuery.sizeOf(context).width,
-                // child: newsListApiStatus == 0 && activityListApiStatus == 0
-                //     ? constIsConnectedToInternet
-                //         ? getDashboard()
-                //         : setupEmptyView(str_no_network_msg)
-                //     : getDashboard(),
                 child: constIsConnectedToInternet
                     ? newDashboard()
                     : setupEmptyView(str_no_network_msg),
@@ -173,8 +165,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             children: [
               //! LIVE CLASS IMMEMDIATE
-              BlocBuilder<LiveClassBloc, LiveClassState>(
+              const SizedBox(height: 16),
+              BlocConsumer<LiveClassBloc, LiveClassState>(
                 bloc: _liveClassBloc,
+                listener: (context, state) {
+                  if (state is LiveClassError) {
+                    showAlertWithMessage(
+                        context, state.message ?? str_some_error_occurred_msg);
+                  }
+                  if (state is LiveClassTimeout) {
+                    showAlertWithMessage(context, str_connection_timeout);
+                  }
+                },
                 builder: (context, state) {
                   if (state is LiveClassError) {
                     return setupEmptyView(str_some_error_occurred_msg);
@@ -242,6 +244,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           const SizedBox(height: 16),
                           _customText(str_news_and_update, title: true),
+                          const SizedBox(height: 16),
                           ListView.builder(
                             physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
@@ -269,7 +272,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (state is ActivitiesLoading) {
                     return Loading(true);
                   }
-                  if (state is ActivitiesError) {
+                  if (state is ActivitiesError) { 
                     return setupEmptyView(str_some_error_occurred_msg);
                   }
                   if (state is ActivitiesTimeout) {
@@ -292,6 +295,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       shrinkWrap: true,
                       itemBuilder: (context, index) {
                         final activity = state.activities[index];
+                        if(state.activities.length == actLen) {
+                          if(_activitiesBloc.isPaginationLoading) {
+                            if(index == state.activities.length) { 
+                            return Center(child: Loading(true));
+                            }
+                          }
+                        }
                         return _activityItem(activity);
                       },
                     );
@@ -495,6 +505,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.075),
+            blurRadius: 10,
+            offset: const Offset(1, 1),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -609,7 +626,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,7 +720,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SizedBox(),
+                                builder: (context) => Scaffold(),
                               ),
                             ).then((_) {
                               _newsBloc.add(FetchNewsAndEvents());
@@ -776,12 +792,18 @@ _customText(text, {title = false, align = Alignment.centerLeft}) {
 }
 
 Widget _newsItem(NewsAndEvents news) {
-  BoxDecoration decoration = BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(8),
-  );
   return Container(
-    decoration: decoration,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.075),
+          blurRadius: 10,
+          offset: const Offset(1, 1),
+        ),
+      ],
+    ),
     padding: const EdgeInsets.all(16),
     margin: const EdgeInsets.fromLTRB(0, 0, 0, 16),
     child: Row(

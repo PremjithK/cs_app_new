@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget setupView() {
-    bool smallScreen = MediaQuery.of(context).size.height < 800;
+    bool smallScreen = MediaQuery.sizeOf(context).height < 800;
 
     final welcometxt = widgetText(
         "Welcome!",
@@ -303,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final containerTxtFieldPassword = Container(
       height: constDeviceType == 1 ? 50 : 60,
-      width: MediaQuery.of(context).size.width - 32,
+      width: MediaQuery.sizeOf(context).width - 32,
       decoration: BoxDecoration(
         // color: Colors.yellow,
         color: Colors.white,
@@ -320,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Container(
           height: constDeviceType == 1 ? 50 : 60,
-          width: MediaQuery.of(context).size.width - 32,
+          width: MediaQuery.sizeOf(context).width - 32,
           decoration: BoxDecoration(
             // color: Colors.yellow,
             color: Colors.white,
@@ -534,7 +534,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: constDeviceType == 1 ||
-                MediaQuery.of(context).orientation == Orientation.portrait
+                MediaQuery.orientationOf(context) == Orientation.portrait
             ? MainAxisAlignment.center
             : MainAxisAlignment.center,
         children: [
@@ -626,26 +626,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final containerLoginBG = Container(
       margin: constDeviceType == 1
-          ? EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.05)
-          : MediaQuery.of(context).orientation == Orientation.portrait
+          ? EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height * 0.05)
+          : MediaQuery.orientationOf(context) == Orientation.portrait
               ? EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height * 0.05)
+                  bottom: MediaQuery.sizeOf(context).height * 0.05)
               : EdgeInsets.only(
-                  top: (MediaQuery.of(context).size.height -
-                          (MediaQuery.of(context).size.height * 0.65)) /
+                  top: (MediaQuery.sizeOf(context).height -
+                          (MediaQuery.sizeOf(context).height * 0.65)) /
                       2,
-                  left: MediaQuery.of(context).size.width * 0.03),
+                  left: MediaQuery.sizeOf(context).width * 0.03),
       width: constDeviceType == 1
-          ? MediaQuery.of(context).orientation == Orientation.portrait
-              ? MediaQuery.of(context).size.width * 0.88
-              : MediaQuery.of(context).size.width * 0.6
-          : MediaQuery.of(context).orientation == Orientation.portrait
-              ? MediaQuery.of(context).size.width * 0.75
-              : MediaQuery.of(context).size.width * 0.4,
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
+              ? MediaQuery.sizeOf(context).width * 0.88
+              : MediaQuery.sizeOf(context).width * 0.6
+          : MediaQuery.orientationOf(context) == Orientation.portrait
+              ? MediaQuery.sizeOf(context).width * 0.75
+              : MediaQuery.sizeOf(context).width * 0.4,
       height: constDeviceType == 1
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? null
-              : MediaQuery.of(context).size.shortestSide * 0.9
+              : MediaQuery.sizeOf(context).shortestSide * 0.9
           : null,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15.0),
@@ -663,18 +663,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     final containerBgImg = SizedBox(
         height: constDeviceType == 1
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? MediaQuery.of(context).size.height * 0.6 < 450
-                    ? MediaQuery.of(context).size.height * 0.45
-                    : MediaQuery.of(context).size.height * 0.5
-                : MediaQuery.of(context).size.height * 0.7
-            : MediaQuery.of(context).orientation == Orientation.portrait
-                ? MediaQuery.of(context).size.height * 0.47
-                : MediaQuery.of(context).size.height,
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
+                ? MediaQuery.sizeOf(context).height * 0.6 < 450
+                    ? MediaQuery.sizeOf(context).height * 0.45
+                    : MediaQuery.sizeOf(context).height * 0.5
+                : MediaQuery.sizeOf(context).height * 0.7
+            : MediaQuery.orientationOf(context) == Orientation.portrait
+                ? MediaQuery.sizeOf(context).height * 0.47
+                : MediaQuery.sizeOf(context).height,
         width: constDeviceType == 1 ||
-                MediaQuery.of(context).orientation == Orientation.portrait
-            ? MediaQuery.of(context).size.width
-            : MediaQuery.of(context).size.width * 0.55,
+                MediaQuery.orientationOf(context) == Orientation.portrait
+            ? MediaQuery.sizeOf(context).width
+            : MediaQuery.sizeOf(context).width * 0.55,
         child: Container(
           color: Colors.transparent,
         ));
@@ -694,7 +694,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Visibility(
           visible: constDeviceType == 1 ||
-              MediaQuery.of(context).orientation == Orientation.portrait,
+              MediaQuery.orientationOf(context) == Orientation.portrait,
           child: containerBgImg,
         ),
         Visibility(
@@ -708,18 +708,18 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         Visibility(
           visible: constDeviceType == 2 &&
-              MediaQuery.of(context).orientation == Orientation.landscape,
+              MediaQuery.orientationOf(context) == Orientation.landscape,
           child: mainRowFoTab,
         ),
         Positioned(
           bottom: 0,
           child: Visibility(
             visible: constDeviceType == 1 ||
-                MediaQuery.of(context).orientation == Orientation.portrait,
-            child: MediaQuery.of(context).orientation == Orientation.portrait
+                MediaQuery.orientationOf(context) == Orientation.portrait,
+            child: MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Container(
                     color: Colors.transparent,
-                    width: MediaQuery.of(context).size.width,
+                    width: MediaQuery.sizeOf(context).width,
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: containerLoginBG,
@@ -727,8 +727,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   )
                 : Container(
                     color: const Color.fromARGB(0, 185, 48, 48),
-                    // height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
+                    // height: MediaQuery.sizeOf(context).height,
+                    width: MediaQuery.sizeOf(context).width,
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: containerLoginBG,
@@ -737,8 +737,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         Align(
-          // MediaQuery.of(context).orientation == Orientation.portrait?  Alignment.topCenter : Alignment.topLeft,
-          alignment: MediaQuery.of(context).orientation == Orientation.portrait
+          // MediaQuery.orientationOf(context) == Orientation.portrait?  Alignment.topCenter : Alignment.topLeft,
+          alignment: MediaQuery.orientationOf(context) == Orientation.portrait
               ? Alignment.topCenter
               : Alignment.topLeft,
           child: Padding(
@@ -746,14 +746,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 top: smallScreen
                     ? 10
                     : constDeviceType == 1
-                        ? MediaQuery.of(context).orientation ==
+                        ? MediaQuery.orientationOf(context) ==
                                 Orientation.portrait
                             ? 50
                             : 0
                         : 70,
                 left: constDeviceType == 1
                     ? 0
-                    : MediaQuery.of(context).orientation == Orientation.portrait
+                    : MediaQuery.orientationOf(context) == Orientation.portrait
                         ? 0
                         : 50),
             child: Image.asset(img_cybersquare_logo,
@@ -765,24 +765,24 @@ class _LoginScreenState extends State<LoginScreen> {
         Visibility(
           visible: (constDeviceType == 2) ||
               (constDeviceType == 1 &&
-                  MediaQuery.of(context).orientation == Orientation.portrait),
+                  MediaQuery.orientationOf(context) == Orientation.portrait),
           child: Positioned(
             top: constDeviceType == 1
-                ? MediaQuery.of(context).size.height * 0.12
-                : MediaQuery.of(context).orientation == Orientation.portrait
-                    ? MediaQuery.of(context).size.height * 0.18
-                    : MediaQuery.of(context).size.height * 0.25,
+                ? MediaQuery.sizeOf(context).height * 0.12
+                : MediaQuery.orientationOf(context) == Orientation.portrait
+                    ? MediaQuery.sizeOf(context).height * 0.18
+                    : MediaQuery.sizeOf(context).height * 0.25,
             left: constDeviceType == 1
-                ? MediaQuery.of(context).size.width * 0.45
-                : MediaQuery.of(context).orientation == Orientation.portrait
-                    ? MediaQuery.of(context).size.width * 0.5
-                    : MediaQuery.of(context).size.width * 0.25,
+                ? MediaQuery.sizeOf(context).width * 0.45
+                : MediaQuery.orientationOf(context) == Orientation.portrait
+                    ? MediaQuery.sizeOf(context).width * 0.5
+                    : MediaQuery.sizeOf(context).width * 0.25,
             child: Container(
               height: smallScreen
-                  ? MediaQuery.of(context).size.longestSide * 0.2
+                  ? MediaQuery.sizeOf(context).longestSide * 0.2
                   : constDeviceType == 1
-                      ? MediaQuery.of(context).size.longestSide * 0.2
-                      : MediaQuery.of(context).size.longestSide * 0.35,
+                      ? MediaQuery.sizeOf(context).longestSide * 0.2
+                      : MediaQuery.sizeOf(context).longestSide * 0.35,
               width: constDeviceType == 1 ? 200 : 350,
               child: Image.asset(
                 img_login_mascot,
@@ -825,7 +825,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Container(
       color: const Color(0xfffef8f8),
-      height: MediaQuery.of(context).size.height,
+      height: MediaQuery.sizeOf(context).height,
       child: mainStack,
     );
   }

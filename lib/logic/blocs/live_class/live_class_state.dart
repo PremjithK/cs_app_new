@@ -12,6 +12,9 @@ final class LiveClassLoaded extends LiveClassState {
   LiveClassLoaded(this.data);
 }
 
-final class LiveClassError extends LiveClassState {}
+final class LiveClassError extends LiveClassState {
+  final String? message;
+  LiveClassError({this.message});
+}
 
 final class LiveClassTimeout extends LiveClassState {}

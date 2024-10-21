@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:cybersquare/data/models/live_classroom_model.dart';
@@ -20,22 +21,29 @@ class LiveClassBloc extends Bloc<LiveClassEvent, LiveClassState> {
   ) async {
     emit(LiveClassLoading());
 
-    final response = await getLiveClassApi();
+    try {
+      final response = await getLiveClassApi();
 
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = json.decode(response.body);
-      if (data['statusCode'] != null &&
-          data["statusCode"] == 403 &&
-          data['forceLogout'] != null &&
-          data["forceLogout"] == true) {
-      } else if (data['statusCode'] != null && data["statusCode"] == 200) {
-        LiveClassroomData liveClassData = liveClassroomDataFromJson(response.body);
+      if (response.statusCode == 200) {
+        Map<String, dynamic> data = json.decode(response.body);
+        if (data['statusCode'] != null &&
+            data["statusCode"] == 403 &&
+            data['forceLogout'] != null &&
+            data["forceLogout"] == true) {
+        } else if (data['statusCode'] != null && data["statusCode"] == 200) {
+          LiveClassroomData liveClassData = liveClassroomDataFromJson(
+            response.body,
+          );
 
-        emit(LiveClassLoaded(liveClassData.liveClasses));
-        
-      } else {
-        emit(LiveClassError());
+          emit(LiveClassLoaded(liveClassData.liveClasses));
+        } else {
+          emit(LiveClassError(message: data['message']));
+        }
       }
+    } on SocketException catch (_) {
+      emit(LiveClassError());
+    } on TimeoutException catch (_) {
+      emit(LiveClassTimeout());
     }
   }
 }

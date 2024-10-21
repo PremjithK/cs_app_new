@@ -32,40 +32,17 @@ class NewsAndEventsBloc extends Bloc<NewsAndEventsEvent, NewsAndEventsState> {
         } else if (data['statusCode'] != null && data["statusCode"] == 200) {
           NewsEventsModel newsEventsModel = NewsEventsModel.fromJson(data);
           List<NewsAndEvents> newsList = newsEventsModel.newsAndEvents!;
-          // newsListRes = Future.value(model.newsAndEvents!);
-
           emit(NewsAndEventsLoaded(newsList));
-
-          // setState(() {
-          //   isNewsEventsLoading = false;
-          //   newsListApiStatus = 1;
-          // });
         } else {
           emit(NewsAndEventsError());
-          // setState(() {
-          //   isNewsEventsLoading = false;
-          //   newsListApiStatus = 4;
-          // });
         }
       } else {
         emit(NewsAndEventsError());
-        // setState(() {
-        //   isNewsEventsLoading = false;
-        //   newsListApiStatus = 4;
-        // });
       }
     } on SocketException catch (_) {
       emit(NewsAndEventsError());
-      // setState(() {
-      //   isNewsEventsLoading = false;
-      //   newsListApiStatus = 2;
-      // });
     } on TimeoutException catch (_) {
       emit(NewsAndEventsTimeout());
-      // setState(() {
-      //   newsListApiStatus = 3;
-      //   isNewsEventsLoading = false;
-      // });
     }
   }
 }

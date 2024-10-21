@@ -9,7 +9,7 @@ import 'package:cybersquare/core/constants/user_details.dart';
 import 'package:cybersquare/logic/blocs/login/login_bloc.dart';
 import 'package:cybersquare/logic/providers/forgotpassword_model.dart';
 import 'package:cybersquare/presentation/widgets/common_widgets.dart';
-import 'package:cybersquare/presentation/widgets/text_widget.dart';
+import 'package:cybersquare/presentation/widgets/widget_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
